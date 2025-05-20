@@ -4,12 +4,10 @@ import React from "react";
 import type { StepProps } from "@/interfaces";
 import { StyledTextarea } from "@/components/form-elements/StyledTextarea";
 
+import ReviewCard from "@/components/form-steps/ReviewCard";
+
 /**
  * Step 7 – Additional Information
- * --------------------------------------------------
- * Simplified per user request:
- * • Removes the review / summary card completely.
- * • Increases the free-text notes field by roughly 50 % (rows ➜ 9).
  */
 export default function Step7AdditionalInfo({ formData, handleChange }: StepProps) {
   return (
@@ -20,8 +18,12 @@ export default function Step7AdditionalInfo({ formData, handleChange }: StepProp
         value={formData.additionalPropertyDescription}
         onChange={handleChange}
         placeholder="Provide any other relevant details about the property…"
-        rows={9} // 50 % more than the previous 6 rows
+        rows={6}
       />
+
+      {/* Review Section */}
+      <h2 className="text-xl font-semibold">Please review all your entries before submitting:</h2>
+      <ReviewCard formData={formData} />
     </div>
   );
 }
