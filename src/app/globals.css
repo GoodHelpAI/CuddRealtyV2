@@ -97,7 +97,20 @@ body {
     /* focus outline */
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
   }
-
+/* --------------------------------------------------
+   Bolder Neubrutalist hover state for buttons
+   -------------------------------------------------- */
+   @layer components {
+    .neubrutalism-button {
+      /* smooth motion for both hover & active */
+      @apply transition-transform transition-shadow transition-filter duration-150;
+  
+      /* ── Hover ───────────────────────────────────── */
+      @apply hover:-translate-x-[3px] hover:-translate-y-[3px]     /* bigger lift   */
+             hover:shadow-[6px_6px_0_theme(colors.black)]          /* deeper shadow */
+             hover:saturate-150 hover:brightness-125;              /* vivid colour  */
+    }
+  }
   /* Text / number / textarea inputs */
   .neubrutalism-input {
     @apply block w-full mt-1 p-3 rounded-none border-2 border-black;
