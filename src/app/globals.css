@@ -74,9 +74,6 @@ body {
   /* Global element resets */
   *   { @apply border-border; }
   body { @apply bg-background text-foreground; }
-
-  /* 🔑  Stop the yellow halo from ever appearing  */
-  button:focus-visible { @apply ring-offset-0 !important; }
 }
 
 /* ---------- Neubrutalist components ---------- */
@@ -91,27 +88,20 @@ body {
     /* visual style */
     @apply rounded-none shadow-[2px_2px_0_theme(colors.black)];
     /* interaction */
-    @apply transition-transform duration-75
-           active:translate-x-[1px] active:translate-y-[1px]
-           active:shadow-[1px_1px_0_theme(colors.black)];
+    @apply transition-transform duration-75;
     /* focus outline */
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-background;
   }
 
-  /* ------------------------------------------
-   Neubrutalist hover treatment for buttons
-   ------------------------------------------ */
-@layer components {
-  .neubrutalism-button {
-    /* smooth motion */
-    @apply transition-transform transition-shadow duration-150;
-
-    /* hover: raise the card and thicken the shadow */
-    @apply hover:-translate-x-[2px] hover:-translate-y-[2px]
-           hover:shadow-[4px_4px_0_theme(colors.black)]
-           hover:brightness-110;          /* subtle colour boost */
+  /* Hover: subtle brightness, maintain shadow */
+  .neubrutalism-button:hover {
+    @apply brightness-110 shadow-[2px_2px_0_theme(colors.black)];
   }
-}
+  
+  /* Active: "pressed in" effect */
+  .neubrutalism-button:active {
+    @apply translate-x-[1px] translate-y-[1px] shadow-[1px_1px_0_theme(colors.black)];
+  }
 
   /* Text / number / textarea inputs */
   .neubrutalism-input {
@@ -119,6 +109,16 @@ body {
     @apply bg-card text-card-foreground placeholder-muted-foreground;
     @apply shadow-[2px_2px_0_theme(colors.black)];
     @apply disabled:opacity-70 disabled:cursor-not-allowed;
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-background;
   }
+}
+
+/* ——— Easter-egg rainbow text ——— */
+@keyframes rainbow-shift {
+  to { filter: hue-rotate(360deg); }
+}
+
+.rainbow-text {
+  display: inline-block;
+  animation: rainbow-shift 4s linear infinite;
 }

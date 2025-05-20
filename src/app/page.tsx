@@ -213,6 +213,21 @@ export default function CuddRealtyFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
+  const [tapCount, setTapCount] = useState(0);
+  const [rainbow, setRainbow] = useState(false);
+
+  const handleFooterTap = () => {
+    setTapCount(prev => {
+      const next = prev + 1;
+      if (next === 3) {
+        setRainbow(true);
+        return 0;              // reset for another surprise later
+      }
+      // clear taps if user waits >800 ms between taps
+      setTimeout(() => setTapCount(0), 800);
+      return next;
+    });
+  };
 
   // Handles changes for most input types (text, select, checkbox groups at root level)
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -920,7 +935,7 @@ export default function CuddRealtyFormPage() {
           {currentStep === 7 && (
             <section>
               <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Review & Submit</h2>
-              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
+              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 6)}
               <p className="my-4 text-sm text-black">Please review all your entries before submitting.</p>
               <div className="bg-neutral-100 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] max-h-96 overflow-y-auto space-y-1 text-xs rounded-none">
                 {Object.entries(formData).map(([key, value]) => (
@@ -973,7 +988,12 @@ export default function CuddRealtyFormPage() {
         <footer className="text-center mt-12 pb-8 text-sm text-black">
             <p>&copy; {new Date().getFullYear()} Cudd Realty. Internal Use Only.</p>
             <div className="my-2"></div> 
-            <p className="font-mono text-xs">(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI</p>
+            <p
+              onClick={handleFooterTap}
+              className={`font-mono text-xs select-none ${rainbow ? 'rainbow-text' : ''}`}
+            >
+              (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI
+            </p>
         </footer>
       </div>
 
