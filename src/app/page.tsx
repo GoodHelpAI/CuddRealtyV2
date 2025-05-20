@@ -1,3 +1,4 @@
+
 // src/app/page.tsx
 // Make sure you have Next.js (App Router) and Tailwind CSS setup in your project.
 
@@ -213,21 +214,6 @@ export default function CuddRealtyFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
-  const [tapCount, setTapCount] = useState(0);
-  const [rainbow, setRainbow] = useState(false);
-
-  const handleFooterTap = () => {
-    setTapCount(prev => {
-      const next = prev + 1;
-      if (next === 3) {
-        setRainbow(true);
-        return 0;              // reset for another surprise later
-      }
-      // clear taps if user waits >800 ms between taps
-      setTimeout(() => setTapCount(0), 800);
-      return next;
-    });
-  };
 
   // Handles changes for most input types (text, select, checkbox groups at root level)
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -988,10 +974,7 @@ export default function CuddRealtyFormPage() {
         <footer className="text-center mt-12 pb-8 text-sm text-black">
             <p>&copy; {new Date().getFullYear()} Cudd Realty. Internal Use Only.</p>
             <div className="my-2"></div> 
-            <p
-              onClick={handleFooterTap}
-              className={`font-mono text-xs select-none ${rainbow ? 'rainbow-text' : ''}`}
-            >
+            <p className="font-mono text-xs select-none">
               (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI
             </p>
         </footer>
