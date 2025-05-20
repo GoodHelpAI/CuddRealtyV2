@@ -371,9 +371,7 @@ export default function CuddRealtyFormPage() {
     
     console.log("Final Form Data:", JSON.stringify(finalDataToSend, null, 2)); 
 
-    // Use the test webhook URL provided
     const n8nWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook-test/c757d1e2-886c-4523-a36e-22b782567ad2";
-    // const n8nProductionWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook/c757d1e2-886c-4523-a36e-22b782567ad2";
 
     if (!n8nWebhookUrl || n8nWebhookUrl === 'YOUR_N8N_WEBHOOK_URL_PLACEHOLDER') { 
       alert("WEBHOOK URL NOT SET! This is unexpected or needs configuration.");
@@ -423,7 +421,7 @@ export default function CuddRealtyFormPage() {
     );
   };
 
-  const renderTextarea = (name: keyof FormData, label: string, placeholder = '') => (
+  const renderTextarea = (name: keyof FormData, label: string, placeholder = '', rows = 3) => (
     <div className="mb-4">
       <label htmlFor={name as string} className="block text-sm font-bold text-black mb-1">{label}</label>
       <textarea
@@ -432,7 +430,7 @@ export default function CuddRealtyFormPage() {
         value={String(formData[name] ?? '')}
         onChange={handleChange}
         placeholder={placeholder}
-        rows={3}
+        rows={rows}
         className={neubrutalismBaseInputClasses}
       />
     </div>
@@ -574,7 +572,7 @@ export default function CuddRealtyFormPage() {
   const getRoomIcon = (roomValue: string): string => { const roomDetail = roomTypeDetails.find(rtd => rtd.value === roomValue); return roomDetail ? roomDetail.icon : '❓'; }; 
 
   const renderRoomSelect = (roomId: string, fieldName: keyof Room, label: string, options: readonly string[] | readonly RoomTypeDetail[] | KitchenApplianceColorType[] | FloorLevelType[], currentValue: string) => (
-    <div>
+    <div className="mb-4"> {/* Added mb-4 for consistent spacing */}
       <label htmlFor={`${fieldName}-${roomId}`} className="block text-sm font-bold text-black mb-1">{label}</label>
       <select
         id={`${fieldName}-${roomId}`}
@@ -598,7 +596,7 @@ export default function CuddRealtyFormPage() {
   );
 
   const renderRoomInput = (roomId: string, fieldName: keyof Room, label: string, type = 'text', currentValue: string | number, placeholder = '') => (
-    <div>
+    <div className="mb-4"> {/* Added mb-4 for consistent spacing */}
       <label htmlFor={`${fieldName}-${roomId}`} className="block text-sm font-bold text-black mb-1">{label}</label>
       <input
         type={type}
@@ -614,7 +612,7 @@ export default function CuddRealtyFormPage() {
   );
 
   const renderRoomCheckbox = (roomId: string, fieldName: keyof Room, label: string, currentValue: boolean) => (
-     <label className="flex items-center space-x-2 col-span-1 py-2 cursor-pointer">
+     <label className="flex items-center space-x-2 col-span-1 py-2 cursor-pointer mb-2"> {/* Added mb-2 for a bit of space if stacked */}
         <input
           type="checkbox"
           checked={currentValue}
@@ -629,7 +627,7 @@ export default function CuddRealtyFormPage() {
   );
 
   const renderRoomTextarea = (roomId: string, fieldName: keyof Room, label: string, currentValue: string) => (
-    <div className="md:col-span-2">
+    <div className="md:col-span-2 mb-4"> {/* Added mb-4 for consistent spacing */}
         <label htmlFor={`${fieldName}-${roomId}`} className="block text-sm font-bold text-black mb-1">{label}</label>
         <textarea
           id={`${fieldName}-${roomId}`}
@@ -692,7 +690,7 @@ export default function CuddRealtyFormPage() {
               {formData.rooms.length === 0 ? (
                 <div className="text-center py-10 border-2 border-dashed border-black">
                   <p className="text-neutral-600 mb-4">No rooms added yet. Click below to add the first room.</p>
-                  <button type="button" onClick={addRoom} className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 border-b-4 border-green-700 hover:border-green-800 shadow-md active:shadow-none active:translate-y-1 text-lg rounded-none">
+                  <button type="button" onClick={addRoom} className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 text-lg">
                     Add First Room
                   </button>
                 </div>
@@ -705,22 +703,21 @@ export default function CuddRealtyFormPage() {
                           {getRoomIcon(room.roomType) && <span className="mr-2 text-xl">{getRoomIcon(room.roomType)}</span>}
                           Room {index + 1} {room.customRoomName && `- ${room.customRoomName}`}
                         </h3>
-                        <button type="button" onClick={() => removeRoom(room.id)} className="bg-red-500 text-white px-3 py-1 text-xs font-bold border-2 border-black hover:bg-red-700 active:bg-red-800 rounded-none">
+                        <button type="button" onClick={() => removeRoom(room.id)} className="neubrutalism-button bg-red-500 text-white px-3 py-1 text-xs font-bold hover:bg-red-700 active:bg-red-800">
                           Remove
                         </button>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0"> {/* Reduced gap-y-4 to gap-y-0 to tighten vertical spacing for inputs */}
                         {renderRoomSelect(room.id, 'roomType', 'Room Type', roomTypeDetails, room.roomType)}
                         {room.roomType !== 'Garage' && renderRoomSelect(room.id, 'floorLevel', 'Floor Level', floorLevelOptions, room.floorLevel || '')}
                         {renderRoomInput(room.id, 'customRoomName', 'Custom Name (Optional)', 'text', room.customRoomName, 'e.g. Kids Room')}
                         
-                        {/* Group Length and Width for side-by-side layout on md screens */}
-                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
                            {renderRoomInput(room.id, 'lengthFt', 'Length (ft)', 'number', room.lengthFt, 'e.g. 12.5')}
                            {renderRoomInput(room.id, 'widthFt', 'Width (ft)', 'number', room.widthFt, 'e.g. 10')}
                         </div>
 
-                        <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 pt-2 border-t border-black"> 
+                        <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 pt-2 border-t border-black mb-4"> {/* Added mb-4 here */}
                           {renderRoomSelect(room.id, 'fan', 'Fan?', yesNoNaOptions, room.fan)}
                           {(room.roomType === 'Utility Room' || room.roomType === 'Garage') && renderRoomSelect(room.id, 'washerDryerHookups', 'W/D Hookups?', yesNoNaOptions, room.washerDryerHookups || 'N/A')}
                           {(room.roomType.includes('Bedroom') || room.roomType.includes('Primary')) && renderRoomSelect(room.id, 'walkInCloset', 'Walk-in Closet?', yesNoNaOptions, room.walkInCloset) }
@@ -757,14 +754,14 @@ export default function CuddRealtyFormPage() {
                             <hr className="md:col-span-2 my-3 border-t border-black"/>
                             {renderChipGroup(`kitchenCabinetSize-${room.id}` as ChipGroupCompositeKeys, 'Cabinet Size', kitchenCabinetSizeChipOptions, room.kitchenCabinetSize, room.id)}
                             {room.kitchenCabinetSize?.other && renderRoomInput(room.id, 'kitchenCabinetSizeOther', 'Specify Other Cabinet Size', 'text', room.kitchenCabinetSizeOther)}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
                                 {renderRoomSelect(room.id, 'kitchenCountertop', 'Countertop', kitchenCountertopOptions, room.kitchenCountertop)}
                                 {renderRoomSelect(room.id, 'kitchenAppliancesColor', 'General Appliances Color', kitchenApplianceColorOptions, room.kitchenAppliancesColor)}
                             </div>
                             <hr className="md:col-span-2 my-3 border-t border-black"/>
                             <div className="md:col-span-2"> {renderRadioGroup(`kitchenFridgeIncluded-${room.id}` as `kitchenFridgeIncluded-${string}`, 'Fridge Included?', yesNoOptions, false, undefined, room.id)} </div>
                             {room.kitchenFridgeIncluded === 'Yes' && <div className="md:col-span-2"> {renderRadioGroup(`kitchenFridgeColor-${room.id}` as `kitchenFridgeColor-${string}`, 'Fridge Color', kitchenFridgeColorOptions, false, undefined, room.id)} </div>}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
                                 {renderRoomSelect(room.id, 'kitchenMicrowaveType', 'Microwave Type', kitchenMicrowaveTypeOptions, room.kitchenMicrowaveType)}
                                 {renderRoomSelect(room.id, 'kitchenDishwasherIncluded', 'Dishwasher Included?', yesNoNegotiableOptions, room.kitchenDishwasherIncluded)}
                                 {room.kitchenDishwasherIncluded !== 'No' && renderRoomSelect(room.id, 'kitchenDishwasherColor', 'Dishwasher Color', kitchenFridgeColorOptions.map(o=>o.value), room.kitchenDishwasherColor)}
@@ -772,7 +769,7 @@ export default function CuddRealtyFormPage() {
                             </div>
                             <hr className="md:col-span-2 my-3 border-t border-black"/>
                             {renderChipGroup(`kitchenRangeType-${room.id}` as ChipGroupCompositeKeys, 'Range Type (Select all that apply)', kitchenRangeTypeChipOptions, room.kitchenRangeType, room.id)}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mt-2">
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 mt-2">
                                 {renderRoomSelect(room.id, 'kitchenCooktopFuel', 'Separate Cooktop Fuel (if no range or range is other)', kitchenCooktopFuelOptions, room.kitchenCooktopFuel)}
                                 {room.kitchenCooktopFuel !== 'None (Range Only)' && room.kitchenCooktopFuel !== '' && renderRoomSelect(room.id, 'kitchenCooktopStyle', 'Cooktop Style', kitchenCooktopStyleOptions, room.kitchenCooktopStyle)}
                                 {renderRoomSelect(room.id, 'kitchenVentHoodType', 'Vent Hood Type', kitchenVentHoodTypeOptions, room.kitchenVentHoodType)}
@@ -784,7 +781,7 @@ export default function CuddRealtyFormPage() {
                           <>
                             <hr className="md:col-span-2 my-4 border-t-2 border-black"/>
                             <h4 className="md:col-span-2 text-md font-semibold mb-2 text-black">Garage Details:</h4>
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
                               {renderRoomSelect(room.id, 'garageSpaces', 'Garage Spaces', garageSpaceOptions, room.garageSpaces)}
                               {renderRoomInput(room.id, 'garageLengthFt', 'Garage Length (ft)', 'number', room.garageLengthFt)}
                               {renderRoomInput(room.id, 'garageWidthFt', 'Garage Width (ft)', 'number', room.garageWidthFt)}
@@ -801,7 +798,7 @@ export default function CuddRealtyFormPage() {
                       <p className="text-xs text-neutral-500 mt-2">Photo upload: Coming Soon!</p>
                     </div>
                   ))}
-                  <button type="button" onClick={addRoom} className="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 border-b-4 border-green-700 hover:border-green-500 shadow-md active:shadow-none active:translate-y-1 rounded-none">
+                  <button type="button" onClick={addRoom} className="neubrutalism-button mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4">
                     Add Another Room
                   </button>
                 </>
@@ -849,7 +846,7 @@ export default function CuddRealtyFormPage() {
                     <div key={patio.id} className="mb-4 p-3 border-2 border-black relative rounded-none bg-white">
                       <div className="flex justify-between items-center">
                         <p className="font-semibold text-black">Patio {index + 1}</p>
-                        <button type="button" onClick={() => removePatio(patio.id)} className="bg-red-500 text-white px-2 py-0.5 text-xs font-bold border-2 border-black hover:bg-red-700 active:bg-red-800 rounded-none">Remove</button>
+                        <button type="button" onClick={() => removePatio(patio.id)} className="neubrutalism-button bg-red-500 text-white px-2 py-0.5 text-xs font-bold hover:bg-red-700 active:bg-red-800">Remove</button>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <input type="number" placeholder="Length (ft)" value={patio.lengthFt} onChange={e => handlePatioChange(patio.id, 'lengthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
@@ -864,7 +861,7 @@ export default function CuddRealtyFormPage() {
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={addPatio} className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm border-b-2 border-blue-700 hover:border-blue-800 shadow-sm active:shadow-none active:translate-y-0.5 rounded-none">Add Patio</button>
+                  <button type="button" onClick={addPatio} className="neubrutalism-button mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm">Add Patio</button>
                 </div>
               )}
               {renderRadioGroup('hasSheds', 'Sheds', yesNoOptions)}
@@ -875,7 +872,7 @@ export default function CuddRealtyFormPage() {
                     <div key={shed.id} className="mb-4 p-3 border-2 border-black relative rounded-none bg-white">
                       <div className="flex justify-between items-center">
                         <p className="font-semibold text-black">Shed {index + 1}</p>
-                        <button type="button" onClick={() => removeShed(shed.id)} className="bg-red-500 text-white px-2 py-0.5 text-xs font-bold border-2 border-black hover:bg-red-700 active:bg-red-800 rounded-none">Remove</button>
+                        <button type="button" onClick={() => removeShed(shed.id)} className="neubrutalism-button bg-red-500 text-white px-2 py-0.5 text-xs font-bold hover:bg-red-700 active:bg-red-800">Remove</button>
                       </div>
                       <div className="grid grid-cols-2 gap-4 mt-2">
                         <input type="number" placeholder="Length (ft)" value={shed.lengthFt} onChange={e => handleShedChange(shed.id, 'lengthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
@@ -883,7 +880,7 @@ export default function CuddRealtyFormPage() {
                       </div>
                     </div>
                   ))}
-                  <button type="button" onClick={addShed} className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm border-b-2 border-blue-700 hover:border-blue-800 shadow-sm active:shadow-none active:translate-y-0.5 rounded-none">Add Shed</button>
+                  <button type="button" onClick={addShed} className="neubrutalism-button mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm">Add Shed</button>
                 </div>
               )}
               {renderRadioGroup('hasFireplace', 'Fireplace', yesNoOptions)}
@@ -924,7 +921,7 @@ export default function CuddRealtyFormPage() {
           {currentStep === 7 && (
             <section>
               <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Review & Submit</h2>
-              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.')}
+              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 6)}
               <p className="my-4 text-sm text-black">Please review all your entries before submitting.</p>
               <div className="bg-neutral-100 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] max-h-96 overflow-y-auto space-y-1 text-xs rounded-none">
                 {Object.entries(formData).map(([key, value]) => (
@@ -948,8 +945,8 @@ export default function CuddRealtyFormPage() {
             <button
               type="button"
               onClick={prevStep}
-              disabled={currentStep === 1}
-              className="bg-neutral-600 hover:bg-neutral-700 text-white font-bold py-3 px-6 border-b-4 border-neutral-800 hover:border-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed shadow-md active:shadow-none active:translate-y-1 rounded-none"
+              disabled={currentStep === 1 || submissionStatus === 'Submitting...'}
+              className="neubrutalism-button bg-neutral-600 hover:bg-neutral-700 text-white font-bold py-3 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -957,14 +954,15 @@ export default function CuddRealtyFormPage() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 border-b-4 border-green-700 hover:border-green-800 shadow-md active:shadow-none active:translate-y-1 rounded-none"
+                className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6"
+                disabled={submissionStatus === 'Submitting...'}
               >
                 Next
               </button>
             ) : (
               <button
                 type="submit"
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 border-b-4 border-green-700 hover:border-green-800 shadow-md active:shadow-none active:translate-y-1 rounded-none"
+                className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6"
                 disabled={submissionStatus === 'Submitting...'}
               >
                 {submissionStatus === 'Submitting...' ? 'Submitting...' : 'Submit'}
@@ -1024,3 +1022,4 @@ export default function CuddRealtyFormPage() {
     </div>
   );
 }
+
