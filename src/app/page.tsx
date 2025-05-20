@@ -1,10 +1,10 @@
-
 // src/app/page.tsx
 // Make sure you have Next.js (App Router) and Tailwind CSS setup in your project.
 
 'use client';
 
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import ReviewCard from "@/components/form-steps/ReviewCard";
 
 // --- Interfaces ---
 interface RoomTypeDetail {
@@ -279,14 +279,32 @@ export default function CuddRealtyFormPage() {
             rooms: prev.rooms.map(room => {
                 if (room.id === actualRoomId) {
                     const currentGroupState = (room[fieldName] || {}) as Record<string, boolean>;
+                    
+                    // Create updated state with toggled value
                     const updatedGroupState = {
                         ...currentGroupState,
                         [key]: !currentGroupState[key]
                     };
-                    // If 'other' cabinet size is deselected, clear the 'other specify' field
-                    if (fieldName === 'kitchenCabinetSize' && key === 'other' && !updatedGroupState.other) {
-                        return { ...room, [fieldName]: updatedGroupState, kitchenCabinetSizeOther: '' };
+                    
+                    // Special handling for kitchenCabinetSize to ensure type safety
+                    if (fieldName === 'kitchenCabinetSize') {
+                        const safeKitchenCabinetSize: Room['kitchenCabinetSize'] = {
+                            s30inch: false,
+                            s36inch: false,
+                            s42inch: false,
+                            custom: false,
+                            other: false,
+                            ...updatedGroupState
+                        };
+                        
+                        // If 'other' cabinet size is deselected, clear the 'other specify' field
+                        if (key === 'other' && !updatedGroupState.other) {
+                            return { ...room, [fieldName]: safeKitchenCabinetSize, kitchenCabinetSizeOther: '' };
+                        }
+                        return { ...room, [fieldName]: safeKitchenCabinetSize };
                     }
+                    
+                    // For other fields like kitchenRangeType
                     return { ...room, [fieldName]: updatedGroupState };
                 }
                 return room;
@@ -325,7 +343,38 @@ export default function CuddRealtyFormPage() {
 
   // Handles changes for any field within a specific room
   const handleRoomFieldChange = (roomId: string, fieldName: keyof Room, value: string | number | boolean | Record<string, boolean>) => {
-    setFormData(prev => ({ ...prev, rooms: prev.rooms.map(room => room.id === roomId ? { ...room, [fieldName]: value } : room ), }));
+    setFormData(prev => {
+      // Special handling for kitchenCabinetSize to ensure it always has the correct structure
+      if (fieldName === 'kitchenCabinetSize' && typeof value === 'object') {
+        const safeKitchenCabinetSize: Room['kitchenCabinetSize'] = {
+          s30inch: false,
+          s36inch: false,
+          s42inch: false,
+          custom: false,
+          other: false,
+          ...value // Spread the incoming values, but only after ensuring defaults
+        };
+        
+        return {
+          ...prev,
+          rooms: prev.rooms.map(room => 
+            room.id === roomId 
+              ? { ...room, [fieldName]: safeKitchenCabinetSize } 
+              : room
+          )
+        };
+      }
+      
+      // For other fields, update normally
+      return { 
+        ...prev, 
+        rooms: prev.rooms.map(room => 
+          room.id === roomId 
+            ? { ...room, [fieldName]: value } 
+            : room
+        )
+      };
+    });
   };
 
   // Removes a room from the rooms array by its ID
@@ -550,53 +599,24 @@ export default function CuddRealtyFormPage() {
     <div className="mb-4">
       <span className="block text-sm font-bold text-black mb-2">{label}</span>
       <div className="flex flex-wrap gap-2">
-        {Object.entries(options).map(([key, optionLabel]) => (
+        {Object.entries(options).map(([key, label]) => (
           <button
-            type="button"
             key={key}
+            type="button"
             onClick={() => handleChipToggle(groupNameComposite, key)}
-            className={`p-3 border-2 border-black font-medium text-sm transition-all duration-150 ease-in-out active:translate-y-0.5 active:shadow-inner rounded-none
-                        ${(stateToUse)[key]
-                          ? 'bg-indigo-600 text-white shadow-[2px_2px_0px_rgba(0,0,0,0.2)]' 
-                          : 'bg-gray-100 text-black hover:bg-yellow-300 hover:text-black' 
-                        }`}
+            className={`px-3 py-2 text-xs font-medium border-2 border-black shadow-[2px_2px_0px_#000000] transition-colors duration-200 ease-in-out ${
+              stateToUse[key] ? 'bg-blue-600 text-white' : 'bg-white text-black hover:bg-neutral-100'
+            }`}
           >
-            {optionLabel}
+            {label}
           </button>
         ))}
       </div>
     </div>
-    );
-  };
+  )};
 
-  const getRoomIcon = (roomValue: string): string => { const roomDetail = roomTypeDetails.find(rtd => rtd.value === roomValue); return roomDetail ? roomDetail.icon : '❓'; }; 
-
-  const renderRoomSelect = (roomId: string, fieldName: keyof Room, label: string, options: readonly string[] | readonly RoomTypeDetail[] | KitchenApplianceColorType[] | FloorLevelType[], currentValue: string) => (
-    <div className="mb-4"> {/* Added mb-4 for consistent spacing */}
-      <label htmlFor={`${fieldName}-${roomId}`} className="block text-sm font-bold text-black mb-1">{label}</label>
-      <select
-        id={`${fieldName}-${roomId}`}
-        name={fieldName as string}
-        value={currentValue}
-        onChange={(e) => handleRoomFieldChange(roomId, fieldName, e.target.value)}
-        className={neubrutalismBaseInputClasses}
-      >
-        <option value="">Select...</option>
-        {options.map(opt =>
-          typeof opt === 'string' ? (
-            <option key={opt} value={opt}>{opt}</option>
-          ) : (
-            <option key={(opt as RoomTypeDetail).value || String(opt)} value={(opt as RoomTypeDetail).value || String(opt)}>
-              {(opt as RoomTypeDetail).label || String(opt)}
-            </option>
-          )
-        )}
-      </select>
-    </div>
-  );
-
-  const renderRoomInput = (roomId: string, fieldName: keyof Room, label: string, type = 'text', currentValue: string | number, placeholder = '') => (
-    <div className="mb-4"> {/* Added mb-4 for consistent spacing */}
+  const renderRoomInput = (roomId: string, fieldName: keyof Room, label: string, type = 'text', placeholder = '', currentValue: string | number) => (
+    <div className="md:col-span-1 mb-4"> {/* Added mb-4 for consistent spacing */}
       <label htmlFor={`${fieldName}-${roomId}`} className="block text-sm font-bold text-black mb-1">{label}</label>
       <input
         type={type}
@@ -699,108 +719,450 @@ export default function CuddRealtyFormPage() {
                   {formData.rooms.map((room, index) => (
                     <div key={room.id} className="mb-6 p-4 border-2 border-black shadow-[6px_6px_0px_#000000] relative rounded-none bg-white">
                       <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-lg font-semibold text-black">
-                          {getRoomIcon(room.roomType) && <span className="mr-2 text-xl">{getRoomIcon(room.roomType)}</span>}
-                          Room {index + 1} {room.customRoomName && `- ${room.customRoomName}`}
+                        <h3 className="text-lg font-bold text-black">
+                          {room.roomType === 'Other' && room.customRoomName ? room.customRoomName : room.roomType}
                         </h3>
-                        <button type="button" onClick={() => removeRoom(room.id)} className="neubrutalism-button bg-red-500 text-white px-3 py-1 text-xs font-bold hover:bg-red-700 active:bg-red-800">
-                          Remove
+                        <button
+                          type="button"
+                          onClick={() => removeRoom(room.id)}
+                          className="text-red-600 hover:text-red-800 font-bold"
+                          aria-label="Remove room"
+                        >
+                          ✕
                         </button>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0"> {/* Reduced gap-y-4 to gap-y-0 to tighten vertical spacing for inputs */}
-                        {renderRoomSelect(room.id, 'roomType', 'Room Type', roomTypeDetails, room.roomType)}
-                        {room.roomType !== 'Garage' && renderRoomSelect(room.id, 'floorLevel', 'Floor Level', floorLevelOptions, room.floorLevel || '')}
-                        {renderRoomInput(room.id, 'customRoomName', 'Custom Name (Optional)', 'text', room.customRoomName, 'e.g. Kids Room')}
-                        
-                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
-                           {renderRoomInput(room.id, 'lengthFt', 'Length (ft)', 'number', room.lengthFt, 'e.g. 12.5')}
-                           {renderRoomInput(room.id, 'widthFt', 'Width (ft)', 'number', room.widthFt, 'e.g. 10')}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2 mb-4">
+                          <label htmlFor={`roomType-${room.id}`} className="block text-sm font-bold text-black mb-1">Room Type</label>
+                          <select
+                            id={`roomType-${room.id}`}
+                            value={room.roomType}
+                            onChange={(e) => handleRoomFieldChange(room.id, 'roomType', e.target.value)}
+                            className={neubrutalismBaseInputClasses}
+                          >
+                            {roomTypeDetails.map(rt => (
+                              <option key={rt.value} value={rt.value}>{rt.label}</option>
+                            ))}
+                          </select>
                         </div>
 
-                        <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2 pt-2 border-t border-black mb-4"> {/* Added mb-4 here */}
-                          {renderRoomSelect(room.id, 'fan', 'Fan?', yesNoNaOptions, room.fan)}
-                          {(room.roomType === 'Utility Room' || room.roomType === 'Garage') && renderRoomSelect(room.id, 'washerDryerHookups', 'W/D Hookups?', yesNoNaOptions, room.washerDryerHookups || 'N/A')}
-                          {(room.roomType.includes('Bedroom') || room.roomType.includes('Primary')) && renderRoomSelect(room.id, 'walkInCloset', 'Walk-in Closet?', yesNoNaOptions, room.walkInCloset) }
-                        </div>
-                        
-                        {room.roomType === 'Primary Bedroom' && (
-                          <>
-                            <hr className="md:col-span-2 my-4 border-t-2 border-black"/>
-                            <h4 className="md:col-span-2 text-md font-semibold mb-0 text-black">Primary Bathroom Features:</h4>
-                            <div className="md:col-span-2 grid grid-cols-2 gap-x-6 gap-y-0">
-                                {renderRoomCheckbox(room.id, 'primaryBathGardenTub', 'Garden Tub', !!room.primaryBathGardenTub)}
-                                {renderRoomCheckbox(room.id, 'primaryBathJets', 'Jets', !!room.primaryBathJets)}
-                                {renderRoomCheckbox(room.id, 'primaryBathWalkInShower', 'Walk-In Shower', !!room.primaryBathWalkInShower)}
-                                {renderRoomCheckbox(room.id, 'primaryBathSeparateVanities', 'Separate Vanities', !!room.primaryBathSeparateVanities)}
-                            </div>
-                          </>
+                        {room.roomType === 'Other' && (
+                          <div className="md:col-span-2 mb-4">
+                            <label htmlFor={`customRoomName-${room.id}`} className="block text-sm font-bold text-black mb-1">Custom Room Name</label>
+                            <input
+                              type="text"
+                              id={`customRoomName-${room.id}`}
+                              value={room.customRoomName}
+                              onChange={(e) => handleRoomFieldChange(room.id, 'customRoomName', e.target.value)}
+                              placeholder="e.g., Craft Room, Home Gym, etc."
+                              className={neubrutalismBaseInputClasses}
+                            />
+                          </div>
                         )}
-                        
+
+                        {renderRoomInput(room.id, 'lengthFt', 'Length (ft)', 'text', 'e.g., 12', room.lengthFt)}
+                        {renderRoomInput(room.id, 'widthFt', 'Width (ft)', 'text', 'e.g., 10', room.widthFt)}
+
+                        <div className="md:col-span-2 mb-4">
+                          <label htmlFor={`floorLevel-${room.id}`} className="block text-sm font-bold text-black mb-1">Floor Level</label>
+                          <select
+                            id={`floorLevel-${room.id}`}
+                            value={room.floorLevel || ''}
+                            onChange={(e) => handleRoomFieldChange(room.id, 'floorLevel', e.target.value as FloorLevelType)}
+                            className={neubrutalismBaseInputClasses}
+                          >
+                            <option value="">Select Floor Level</option>
+                            {floorLevelOptions.filter(o => o !== '').map(fl => (
+                              <option key={fl} value={fl}>{fl}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Conditionally render fields based on room type */}
                         {room.roomType === 'Kitchen' && (
                           <>
-                            <hr className="md:col-span-2 my-4 border-t-2 border-black"/>
-                            <h4 className="md:col-span-2 text-md font-semibold mb-2 text-black">Kitchen Details:</h4>
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-                              {renderRoomCheckbox(room.id, 'kitchenIsland', 'Island', room.kitchenIsland)}
-                              {renderRoomCheckbox(room.id, 'kitchenRaisedBar', 'Raised Bar', room.kitchenRaisedBar)}
-                              {renderRoomCheckbox(room.id, 'kitchenEatIn', 'Eat-in Kitchen', room.kitchenEatIn)}
-                              {renderRoomCheckbox(room.id, 'kitchenWalkInPantry', 'Walk-in Pantry', room.kitchenWalkInPantry)}
-                              {renderRoomCheckbox(room.id, 'kitchenTileBacksplash', 'Tile Backsplash', room.kitchenTileBacksplash)}
-                              {renderRoomCheckbox(room.id, 'kitchenButlersPantry', 'Butler\'s Pantry', room.kitchenButlersPantry)}
+                            <div className="md:col-span-2 border-t-2 border-black pt-4 mt-2 mb-4">
+                              <h4 className="font-bold text-black mb-3">Kitchen Features</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                {renderRoomCheckbox(room.id, 'kitchenIsland', 'Island', room.kitchenIsland)}
+                                {renderRoomCheckbox(room.id, 'kitchenRaisedBar', 'Raised Bar', room.kitchenRaisedBar)}
+                                {renderRoomCheckbox(room.id, 'kitchenEatIn', 'Eat-In', room.kitchenEatIn)}
+                                {renderRoomCheckbox(room.id, 'kitchenWalkInPantry', 'Walk-In Pantry', room.kitchenWalkInPantry)}
+                                {renderRoomCheckbox(room.id, 'kitchenTileBacksplash', 'Tile Backsplash', room.kitchenTileBacksplash)}
+                                {renderRoomCheckbox(room.id, 'kitchenButlersPantry', 'Butler\'s Pantry', room.kitchenButlersPantry)}
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenCountertop-${room.id}`} className="block text-sm font-bold text-black mb-1">Countertop Material</label>
+                              <select
+                                id={`kitchenCountertop-${room.id}`}
+                                value={room.kitchenCountertop}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenCountertop', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Countertop Material</option>
+                                {kitchenCountertopOptions.filter(o => o !== '').map(ct => (
+                                  <option key={ct} value={ct}>{ct}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <span className="block text-sm font-bold text-black mb-2">Cabinet Size</span>
+                              {renderChipGroup(`kitchenCabinetSize-${room.id}`, '', kitchenCabinetSizeChipOptions, room.kitchenCabinetSize, room.id)}
+                              
+                              {room.kitchenCabinetSize.other && (
+                                <div className="mt-2">
+                                  <label htmlFor={`kitchenCabinetSizeOther-${room.id}`} className="block text-sm font-bold text-black mb-1">Specify Other Cabinet Size</label>
+                                  <input
+                                    type="text"
+                                    id={`kitchenCabinetSizeOther-${room.id}`}
+                                    value={room.kitchenCabinetSizeOther}
+                                    onChange={(e) => handleRoomFieldChange(room.id, 'kitchenCabinetSizeOther', e.target.value)}
+                                    placeholder="e.g., Custom height, special dimensions, etc."
+                                    className={neubrutalismBaseInputClasses}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenAppliancesColor-${room.id}`} className="block text-sm font-bold text-black mb-1">Appliances Color</label>
+                              <select
+                                id={`kitchenAppliancesColor-${room.id}`}
+                                value={room.kitchenAppliancesColor}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenAppliancesColor', e.target.value as KitchenApplianceColorType)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Appliances Color</option>
+                                {kitchenApplianceColorOptions.filter(o => o !== '').map(ac => (
+                                  <option key={ac} value={ac}>{ac}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <span className="block text-sm font-bold text-black mb-1">Refrigerator Included</span>
+                              <div className="mt-2 space-x-0 sm:space-x-4 flex flex-col sm:flex-row">
+                                {yesNoOptions.map(opt => (
+                                  <label key={opt.value} className="inline-flex items-center mr-0 sm:mr-4 mb-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`kitchenFridgeIncluded-${room.id}`}
+                                      value={opt.value}
+                                      checked={room.kitchenFridgeIncluded === opt.value}
+                                      onChange={(e) => handleRadioChange(`kitchenFridgeIncluded-${room.id}`, e.target.value)}
+                                      className="sr-only custom-radio-input"
+                                    />
+                                    <span className="custom-radio-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                                      {room.kitchenFridgeIncluded === opt.value && <span className="w-2.5 h-2.5 bg-black"></span>}
+                                    </span>
+                                    <span className="text-black text-sm">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            {room.kitchenFridgeIncluded === 'Yes' && (
+                              <div className="md:col-span-2 mb-4">
+                                <span className="block text-sm font-bold text-black mb-1">Refrigerator Color</span>
+                                <div className="mt-2 space-x-0 sm:space-x-4 flex flex-col sm:flex-row">
+                                  {kitchenFridgeColorOptions.map(opt => (
+                                    <label key={opt.value} className="inline-flex items-center mr-0 sm:mr-4 mb-2 cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={`kitchenFridgeColor-${room.id}`}
+                                        value={opt.value}
+                                        checked={room.kitchenFridgeColor === opt.value}
+                                        onChange={(e) => handleRadioChange(`kitchenFridgeColor-${room.id}`, e.target.value)}
+                                        className="sr-only custom-radio-input"
+                                      />
+                                      <span className="custom-radio-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                                        {room.kitchenFridgeColor === opt.value && <span className="w-2.5 h-2.5 bg-black"></span>}
+                                      </span>
+                                      <span className="text-black text-sm">{opt.label}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenMicrowaveType-${room.id}`} className="block text-sm font-bold text-black mb-1">Microwave Type</label>
+                              <select
+                                id={`kitchenMicrowaveType-${room.id}`}
+                                value={room.kitchenMicrowaveType}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenMicrowaveType', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Microwave Type</option>
+                                {kitchenMicrowaveTypeOptions.filter(o => o !== '').map(mt => (
+                                  <option key={mt} value={mt}>{mt}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <span className="block text-sm font-bold text-black mb-1">Dishwasher Included</span>
+                              <div className="mt-2 space-x-0 sm:space-x-4 flex flex-col sm:flex-row">
+                                {yesNoNegotiableOptions.map(opt => (
+                                  <label key={opt} className="inline-flex items-center mr-0 sm:mr-4 mb-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`kitchenDishwasherIncluded-${room.id}`}
+                                      value={opt}
+                                      checked={room.kitchenDishwasherIncluded === opt}
+                                      onChange={(e) => handleRoomFieldChange(room.id, 'kitchenDishwasherIncluded', e.target.value)}
+                                      className="sr-only custom-radio-input"
+                                    />
+                                    <span className="custom-radio-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                                      {room.kitchenDishwasherIncluded === opt && <span className="w-2.5 h-2.5 bg-black"></span>}
+                                    </span>
+                                    <span className="text-black text-sm">{opt}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <span className="block text-sm font-bold text-black mb-1">Disposal</span>
+                              <div className="mt-2 space-x-0 sm:space-x-4 flex flex-col sm:flex-row">
+                                {yesNoOptions.map(opt => (
+                                  <label key={opt.value} className="inline-flex items-center mr-0 sm:mr-4 mb-2 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name={`kitchenDisposal-${room.id}`}
+                                      value={opt.value}
+                                      checked={room.kitchenDisposal === opt.value}
+                                      onChange={(e) => handleRoomFieldChange(room.id, 'kitchenDisposal', e.target.value)}
+                                      className="sr-only custom-radio-input"
+                                    />
+                                    <span className="custom-radio-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                                      {room.kitchenDisposal === opt.value && <span className="w-2.5 h-2.5 bg-black"></span>}
+                                    </span>
+                                    <span className="text-black text-sm">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-2">
                               {renderRoomCheckbox(room.id, 'kitchenCompactor', 'Compactor', room.kitchenCompactor)}
                               {renderRoomCheckbox(room.id, 'kitchenWineCooler', 'Wine Cooler', room.kitchenWineCooler)}
                               {renderRoomCheckbox(room.id, 'kitchenOutdoorGrill', 'Outdoor Grill', room.kitchenOutdoorGrill)}
                             </div>
-                            <hr className="md:col-span-2 my-3 border-t border-black"/>
-                            {renderChipGroup(`kitchenCabinetSize-${room.id}` as ChipGroupCompositeKeys, 'Cabinet Size', kitchenCabinetSizeChipOptions, room.kitchenCabinetSize, room.id)}
-                            {room.kitchenCabinetSize?.other && renderRoomInput(room.id, 'kitchenCabinetSizeOther', 'Specify Other Cabinet Size', 'text', room.kitchenCabinetSizeOther)}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
-                                {renderRoomSelect(room.id, 'kitchenCountertop', 'Countertop', kitchenCountertopOptions, room.kitchenCountertop)}
-                                {renderRoomSelect(room.id, 'kitchenAppliancesColor', 'General Appliances Color', kitchenApplianceColorOptions, room.kitchenAppliancesColor)}
+
+                            <div className="md:col-span-2 mb-4">
+                              <span className="block text-sm font-bold text-black mb-2">Range Type</span>
+                              {renderChipGroup(`kitchenRangeType-${room.id}`, '', kitchenRangeTypeChipOptions, room.kitchenRangeType, room.id)}
                             </div>
-                            <hr className="md:col-span-2 my-3 border-t border-black"/>
-                            <div className="md:col-span-2"> {renderRadioGroup(`kitchenFridgeIncluded-${room.id}` as `kitchenFridgeIncluded-${string}`, 'Fridge Included?', yesNoOptions, false, undefined, room.id)} </div>
-                            {room.kitchenFridgeIncluded === 'Yes' && <div className="md:col-span-2"> {renderRadioGroup(`kitchenFridgeColor-${room.id}` as `kitchenFridgeColor-${string}`, 'Fridge Color', kitchenFridgeColorOptions, false, undefined, room.id)} </div>}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
-                                {renderRoomSelect(room.id, 'kitchenMicrowaveType', 'Microwave Type', kitchenMicrowaveTypeOptions, room.kitchenMicrowaveType)}
-                                {renderRoomSelect(room.id, 'kitchenDishwasherIncluded', 'Dishwasher Included?', yesNoNegotiableOptions, room.kitchenDishwasherIncluded)}
-                                {room.kitchenDishwasherIncluded !== 'No' && renderRoomSelect(room.id, 'kitchenDishwasherColor', 'Dishwasher Color', kitchenFridgeColorOptions.map(o=>o.value), room.kitchenDishwasherColor)}
-                                {renderRoomSelect(room.id, 'kitchenDisposal', 'Disposal?', yesNoOptions.map(o=>o.value), room.kitchenDisposal)}
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenCooktopFuel-${room.id}`} className="block text-sm font-bold text-black mb-1">Cooktop Fuel</label>
+                              <select
+                                id={`kitchenCooktopFuel-${room.id}`}
+                                value={room.kitchenCooktopFuel}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenCooktopFuel', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Cooktop Fuel</option>
+                                {kitchenCooktopFuelOptions.filter(o => o !== '').map(cf => (
+                                  <option key={cf} value={cf}>{cf}</option>
+                                ))}
+                              </select>
                             </div>
-                            <hr className="md:col-span-2 my-3 border-t border-black"/>
-                            {renderChipGroup(`kitchenRangeType-${room.id}` as ChipGroupCompositeKeys, 'Range Type (Select all that apply)', kitchenRangeTypeChipOptions, room.kitchenRangeType, room.id)}
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0 mt-2">
-                                {renderRoomSelect(room.id, 'kitchenCooktopFuel', 'Separate Cooktop Fuel (if no range or range is other)', kitchenCooktopFuelOptions, room.kitchenCooktopFuel)}
-                                {room.kitchenCooktopFuel !== 'None (Range Only)' && room.kitchenCooktopFuel !== '' && renderRoomSelect(room.id, 'kitchenCooktopStyle', 'Cooktop Style', kitchenCooktopStyleOptions, room.kitchenCooktopStyle)}
-                                {renderRoomSelect(room.id, 'kitchenVentHoodType', 'Vent Hood Type', kitchenVentHoodTypeOptions, room.kitchenVentHoodType)}
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenCooktopStyle-${room.id}`} className="block text-sm font-bold text-black mb-1">Cooktop Style</label>
+                              <select
+                                id={`kitchenCooktopStyle-${room.id}`}
+                                value={room.kitchenCooktopStyle}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenCooktopStyle', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Cooktop Style</option>
+                                {kitchenCooktopStyleOptions.filter(o => o !== '').map(cs => (
+                                  <option key={cs} value={cs}>{cs}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-2 mb-4">
+                              <label htmlFor={`kitchenVentHoodType-${room.id}`} className="block text-sm font-bold text-black mb-1">Vent Hood Type</label>
+                              <select
+                                id={`kitchenVentHoodType-${room.id}`}
+                                value={room.kitchenVentHoodType}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'kitchenVentHoodType', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                <option value="">Select Vent Hood Type</option>
+                                {kitchenVentHoodTypeOptions.filter(o => o !== '').map(vh => (
+                                  <option key={vh} value={vh}>{vh}</option>
+                                ))}
+                              </select>
                             </div>
                           </>
                         )}
-                        
+
                         {room.roomType === 'Garage' && (
                           <>
-                            <hr className="md:col-span-2 my-4 border-t-2 border-black"/>
-                            <h4 className="md:col-span-2 text-md font-semibold mb-2 text-black">Garage Details:</h4>
-                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0">
-                              {renderRoomSelect(room.id, 'garageSpaces', 'Garage Spaces', garageSpaceOptions, room.garageSpaces)}
-                              {renderRoomInput(room.id, 'garageLengthFt', 'Garage Length (ft)', 'number', room.garageLengthFt)}
-                              {renderRoomInput(room.id, 'garageWidthFt', 'Garage Width (ft)', 'number', room.garageWidthFt)}
-                              {renderRoomSelect(room.id, 'garageDoorOpeners', '# Door Openers', garageDoorOpenerOptions, room.garageDoorOpeners)}
-                              {renderRoomSelect(room.id, 'garageIsAttached', 'Attached?', yesNoNaOptions, room.garageIsAttached)}
-                              {renderRoomSelect(room.id, 'garageIsFinished', 'Finished?', yesNoNaOptions, room.garageIsFinished)}
-                              {renderRoomCheckbox(room.id, 'garageHasStorage', 'Storage', room.garageHasStorage)}
-                              {renderRoomCheckbox(room.id, 'garageHasWorkshop', 'Workshop', room.garageHasWorkshop)}
+                            <div className="md:col-span-2 border-t-2 border-black pt-4 mt-2 mb-4">
+                              <h4 className="font-bold text-black mb-3">Garage Features</h4>
+                            </div>
+
+                            <div className="md:col-span-1 mb-4">
+                              <label htmlFor={`garageSpaces-${room.id}`} className="block text-sm font-bold text-black mb-1">Garage Spaces</label>
+                              <select
+                                id={`garageSpaces-${room.id}`}
+                                value={room.garageSpaces}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'garageSpaces', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                {garageSpaceOptions.map(gs => (
+                                  <option key={gs} value={gs}>{gs}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-1 mb-4">
+                              <label htmlFor={`garageDoorOpeners-${room.id}`} className="block text-sm font-bold text-black mb-1">Door Openers</label>
+                              <select
+                                id={`garageDoorOpeners-${room.id}`}
+                                value={room.garageDoorOpeners}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'garageDoorOpeners', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                {garageDoorOpenerOptions.map(gdo => (
+                                  <option key={gdo} value={gdo}>{gdo}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {renderRoomInput(room.id, 'garageLengthFt', 'Length (ft)', 'text', 'e.g., 20', room.garageLengthFt)}
+                            {renderRoomInput(room.id, 'garageWidthFt', 'Width (ft)', 'text', 'e.g., 20', room.garageWidthFt)}
+
+                            <div className="md:col-span-1 mb-4">
+                              <label htmlFor={`garageIsAttached-${room.id}`} className="block text-sm font-bold text-black mb-1">Is Attached</label>
+                              <select
+                                id={`garageIsAttached-${room.id}`}
+                                value={room.garageIsAttached}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'garageIsAttached', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                {yesNoNaOptions.map(yn => (
+                                  <option key={yn} value={yn}>{yn}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-1 mb-4">
+                              <label htmlFor={`garageIsFinished-${room.id}`} className="block text-sm font-bold text-black mb-1">Is Finished</label>
+                              <select
+                                id={`garageIsFinished-${room.id}`}
+                                value={room.garageIsFinished}
+                                onChange={(e) => handleRoomFieldChange(room.id, 'garageIsFinished', e.target.value)}
+                                className={neubrutalismBaseInputClasses}
+                              >
+                                {yesNoNaOptions.map(yn => (
+                                  <option key={yn} value={yn}>{yn}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {renderRoomCheckbox(room.id, 'garageHasStorage', 'Has Storage', room.garageHasStorage)}
+                              {renderRoomCheckbox(room.id, 'garageHasWorkshop', 'Has Workshop', room.garageHasWorkshop)}
                             </div>
                           </>
                         )}
+
+                        {room.roomType === 'Primary Bedroom' && (
+                          <>
+                            <div className="md:col-span-2 border-t-2 border-black pt-4 mt-2 mb-4">
+                              <h4 className="font-bold text-black mb-3">Primary Bedroom Features</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div className="md:col-span-1">
+                                  <label className="block text-sm font-bold text-black mb-1">Fan</label>
+                                  <select
+                                    value={room.fan}
+                                    onChange={(e) => handleRoomFieldChange(room.id, 'fan', e.target.value)}
+                                    className={neubrutalismBaseInputClasses}
+                                  >
+                                    {yesNoNaOptions.map(yn => (
+                                      <option key={yn} value={yn}>{yn}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="md:col-span-1">
+                                  <label className="block text-sm font-bold text-black mb-1">Walk-In Closet</label>
+                                  <select
+                                    value={room.walkInCloset}
+                                    onChange={(e) => handleRoomFieldChange(room.id, 'walkInCloset', e.target.value)}
+                                    className={neubrutalismBaseInputClasses}
+                                  >
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                    <option value="N/A_WC">N/A</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {room.roomType === 'Bathroom' && (
+                          <>
+                            <div className="md:col-span-2 border-t-2 border-black pt-4 mt-2 mb-4">
+                              <h4 className="font-bold text-black mb-3">Bathroom Features</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {renderRoomCheckbox(room.id, 'primaryBathGardenTub', 'Garden Tub', room.primaryBathGardenTub || false)}
+                                {renderRoomCheckbox(room.id, 'primaryBathJets', 'Jets', room.primaryBathJets || false)}
+                                {renderRoomCheckbox(room.id, 'primaryBathWalkInShower', 'Walk-In Shower', room.primaryBathWalkInShower || false)}
+                                {renderRoomCheckbox(room.id, 'primaryBathSeparateVanities', 'Separate Vanities', room.primaryBathSeparateVanities || false)}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {room.roomType === 'Utility Room' && (
+                          <>
+                            <div className="md:col-span-2 border-t-2 border-black pt-4 mt-2 mb-4">
+                              <h4 className="font-bold text-black mb-3">Utility Room Features</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
+                                <div className="md:col-span-1">
+                                  <label className="block text-sm font-bold text-black mb-1">Washer/Dryer Hookups</label>
+                                  <select
+                                    value={room.washerDryerHookups}
+                                    onChange={(e) => handleRoomFieldChange(room.id, 'washerDryerHookups', e.target.value)}
+                                    className={neubrutalismBaseInputClasses}
+                                  >
+                                    {yesNoNaOptions.map(yn => (
+                                      <option key={yn} value={yn}>{yn}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Notes field for all room types */}
+                        {renderRoomTextarea(room.id, 'featuresNotes', 'Additional Notes', room.featuresNotes)}
                       </div>
-                      {renderRoomTextarea(room.id, 'featuresNotes', 'Features / Notes for this Room', room.featuresNotes)}
-                      <p className="text-xs text-neutral-500 mt-2">Photo upload: Coming Soon!</p>
                     </div>
                   ))}
-                  <button type="button" onClick={addRoom} className="neubrutalism-button mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4">
-                    Add Another Room
-                  </button>
+
+                  <div className="flex justify-center mt-6">
+                    <button
+                      type="button"
+                      onClick={addRoom}
+                      className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6"
+                    >
+                      Add Another Room
+                    </button>
+                  </div>
                 </>
               )}
             </section>
@@ -808,131 +1170,292 @@ export default function CuddRealtyFormPage() {
 
           {currentStep === 4 && (
             <section>
-              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 4: Carport & RV Pad</h2>
-              {renderRadioGroup('carport', 'Carport', yesNoOptions)}
-              {formData.carport === 'Yes' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  {renderInput('carportLengthFt', 'Carport Length (ft)', 'number', 'e.g. 10')}
-                  {renderInput('carportWidthFt', 'Carport Width (ft)', 'number', 'e.g. 18')}
-                </div>
+              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 4: Flooring & Features</h2>
+              {renderChipGroup('flooringTypes', 'Flooring Types', flooringTypeOptions)}
+              {renderInput('specifyOtherFlooringType', 'Specify Other Flooring Type', 'text', 'e.g., Bamboo, Cork, etc.')}
+              {renderInput('roofType', 'Roof Type', 'text', 'e.g., Asphalt Shingle, Metal, Tile, etc.')}
+              
+              {renderRadioGroup('hasFireplace', 'Fireplace', yesNoOptions)}
+              {formData.hasFireplace === 'Yes' && (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="numberOfFireplaces" className="block text-sm font-bold text-black mb-1">Number of Fireplaces</label>
+                    <select
+                      name="numberOfFireplaces"
+                      id="numberOfFireplaces"
+                      value={formData.numberOfFireplaces}
+                      onChange={handleChange}
+                      className={neubrutalismBaseInputClasses}
+                    >
+                      {fireplaceNumberOptions.map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <span className="block text-sm font-bold text-black mb-2">Fireplace Features</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {Object.entries({
+                        wood: 'Wood Burning',
+                        gas: 'Gas',
+                        gasLogs: 'Gas Logs',
+                        electricStarter: 'Electric Starter',
+                        vaultedCeilingsNearFP: 'Vaulted Ceilings',
+                        programmableThermostatFP: 'Programmable Thermostat'
+                      }).map(([key, label]) => (
+                        <label key={key} className="flex items-center space-x-2 py-1 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name={`fireplaceFeatures.${key}`}
+                            checked={formData.fireplaceFeatures[key as keyof typeof formData.fireplaceFeatures]}
+                            onChange={handleChange}
+                            className="sr-only custom-checkbox-input"
+                          />
+                          <span className="custom-checkbox-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                            {formData.fireplaceFeatures[key as keyof typeof formData.fireplaceFeatures] && <span className="w-2.5 h-2.5 bg-black"></span>}
+                          </span>
+                          <span className="text-sm font-medium text-black">{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
-              {renderRadioGroup('rvPad', 'RV Pad', yesNoOptions)}
-              {formData.rvPad === 'Yes' && (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  {renderInput('rvPadLengthFt', 'RV Pad Length (ft)', 'number', 'e.g. 30')}
-                  {renderInput('rvPadWidthFt', 'RV Pad Width (ft)', 'number', 'e.g. 12')}
-                </div>
-              )}
+              
+              {renderSelect('waterHeaterType', 'Water Heater Type', waterHeaterOptions)}
+              {renderSelect('acType', 'AC Type', acOptions)}
+              {formData.acType === 'Other' && renderInput('acTypeOther', 'Specify Other AC Type', 'text', 'e.g., Mini-Split, etc.')}
+              {renderSelect('heatType', 'Heat Type', heatOptions)}
             </section>
           )}
 
           {currentStep === 5 && (
             <section>
-              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 5: Flooring</h2>
-              {renderChipGroup('flooringTypes', 'Flooring Types (Select all that apply)', flooringTypeOptions)}
-              {renderInput('specifyOtherFlooringType', 'Specify Other Flooring Type', 'text', 'e.g., Bamboo')}
+              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 5: Outdoor Features</h2>
+              
+              {renderRadioGroup('hasPatios', 'Patios', yesNoOptions)}
+              {formData.hasPatios === 'Yes' && (
+                <div className="mb-6">
+                  {formData.patios.length === 0 ? (
+                    <div className="text-center py-6 border-2 border-dashed border-black">
+                      <p className="text-neutral-600 mb-4">No patios added yet. Click below to add the first patio.</p>
+                      <button type="button" onClick={addPatio} className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4">
+                        Add First Patio
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {formData.patios.map((patio, index) => (
+                        <div key={patio.id} className="mb-4 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] relative rounded-none">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-lg font-bold text-black">Patio {index + 1}</h3>
+                            <button
+                              type="button"
+                              onClick={() => removePatio(patio.id)}
+                              className="text-red-600 hover:text-red-800 font-bold"
+                              aria-label="Remove patio"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-1">
+                              <label className="block text-sm font-bold text-black mb-1">Length (ft)</label>
+                              <input
+                                type="text"
+                                value={patio.lengthFt}
+                                onChange={(e) => handlePatioChange(patio.id, 'lengthFt', e.target.value)}
+                                placeholder="e.g., 10"
+                                className={neubrutalismBaseInputClasses}
+                              />
+                            </div>
+                            <div className="md:col-span-1">
+                              <label className="block text-sm font-bold text-black mb-1">Width (ft)</label>
+                              <input
+                                type="text"
+                                value={patio.widthFt}
+                                onChange={(e) => handlePatioChange(patio.id, 'widthFt', e.target.value)}
+                                placeholder="e.g., 12"
+                                className={neubrutalismBaseInputClasses}
+                              />
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <span className="block text-sm font-bold text-black mb-2">Patio Features</span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[
+                                  { key: 'isCovered', label: 'Covered' },
+                                  { key: 'isUncovered', label: 'Uncovered' },
+                                  { key: 'isConcrete', label: 'Concrete' },
+                                  { key: 'isPavers', label: 'Pavers' },
+                                  { key: 'isGravel', label: 'Gravel' }
+                                ].map(({ key, label }) => (
+                                  <label key={key} className="flex items-center space-x-2 py-1 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={(patio as any)[key]}
+                                      onChange={(e) => handlePatioChange(patio.id, key as keyof Omit<Patio, 'id'>, e.target.checked)}
+                                      className="sr-only custom-checkbox-input"
+                                    />
+                                    <span className="custom-checkbox-button w-5 h-5 border-2 border-black bg-white inline-flex items-center justify-center mr-2 flex-shrink-0">
+                                      {(patio as any)[key] && <span className="w-2.5 h-2.5 bg-black"></span>}
+                                    </span>
+                                    <span className="text-sm font-medium text-black">{label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex justify-center mt-4">
+                        <button
+                          type="button"
+                          onClick={addPatio}
+                          className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4"
+                        >
+                          Add Another Patio
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {renderRadioGroup('hasSheds', 'Sheds', yesNoOptions)}
+              {formData.hasSheds === 'Yes' && (
+                <div className="mb-6">
+                  {formData.sheds.length === 0 ? (
+                    <div className="text-center py-6 border-2 border-dashed border-black">
+                      <p className="text-neutral-600 mb-4">No sheds added yet. Click below to add the first shed.</p>
+                      <button type="button" onClick={addShed} className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4">
+                        Add First Shed
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {formData.sheds.map((shed, index) => (
+                        <div key={shed.id} className="mb-4 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] relative rounded-none">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-lg font-bold text-black">Shed {index + 1}</h3>
+                            <button
+                              type="button"
+                              onClick={() => removeShed(shed.id)}
+                              className="text-red-600 hover:text-red-800 font-bold"
+                              aria-label="Remove shed"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-1">
+                              <label className="block text-sm font-bold text-black mb-1">Length (ft)</label>
+                              <input
+                                type="text"
+                                value={shed.lengthFt}
+                                onChange={(e) => handleShedChange(shed.id, 'lengthFt', e.target.value)}
+                                placeholder="e.g., 8"
+                                className={neubrutalismBaseInputClasses}
+                              />
+                            </div>
+                            <div className="md:col-span-1">
+                              <label className="block text-sm font-bold text-black mb-1">Width (ft)</label>
+                              <input
+                                type="text"
+                                value={shed.widthFt}
+                                onChange={(e) => handleShedChange(shed.id, 'widthFt', e.target.value)}
+                                placeholder="e.g., 10"
+                                className={neubrutalismBaseInputClasses}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex justify-center mt-4">
+                        <button
+                          type="button"
+                          onClick={addShed}
+                          className="neubrutalism-button bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4"
+                        >
+                          Add Another Shed
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {renderRadioGroup('pool', 'Pool', yesNoOptions)}
+              {renderRadioGroup('hotTubSpa', 'Hot Tub/Spa', yesNoOptions)}
+              {renderRadioGroup('sprinklerSystem', 'Sprinkler System', yesNoOptions)}
+              {renderRadioGroup('alarmSystem', 'Alarm System', yesNoOptions)}
+              
+              <div className="mb-4">
+                <label htmlFor="numberOfSmokeDetectors" className="block text-sm font-bold text-black mb-1">Number of Smoke Detectors</label>
+                <select
+                  name="numberOfSmokeDetectors"
+                  id="numberOfSmokeDetectors"
+                  value={formData.numberOfSmokeDetectors}
+                  onChange={handleChange}
+                  className={neubrutalismBaseInputClasses}
+                >
+                  <option value="">Select Number</option>
+                  {smokeDetectorNumberOptions.map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+              </div>
             </section>
           )}
 
           {currentStep === 6 && (
             <section>
-              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 6: Additional Details & Features</h2>
-              {renderInput('roofType', 'Roof Type/Material', 'text', 'e.g., Composition Shingle, Metal')}
-              {renderRadioGroup('hasPatios', 'Patios', yesNoOptions)}
-              {formData.hasPatios === 'Yes' && (
-                <div className="my-4 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] rounded-none bg-neutral-50">
-                  <h3 className="text-md font-bold text-black mb-2">Patio Details</h3>
-                  {formData.patios.map((patio, index) => (
-                    <div key={patio.id} className="mb-4 p-3 border-2 border-black relative rounded-none bg-white">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-black">Patio {index + 1}</p>
-                        <button type="button" onClick={() => removePatio(patio.id)} className="neubrutalism-button bg-red-500 text-white px-2 py-0.5 text-xs font-bold hover:bg-red-700 active:bg-red-800">Remove</button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <input type="number" placeholder="Length (ft)" value={patio.lengthFt} onChange={e => handlePatioChange(patio.id, 'lengthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
-                        <input type="number" placeholder="Width (ft)" value={patio.widthFt} onChange={e => handlePatioChange(patio.id, 'widthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {renderCheckbox(`isCovered-${patio.id}`, 'Covered', patio.isCovered, e => handlePatioChange(patio.id, 'isCovered', e.target.checked))}
-                        {renderCheckbox(`isUncovered-${patio.id}`, 'Uncovered', patio.isUncovered, e => handlePatioChange(patio.id, 'isUncovered', e.target.checked))}
-                        {renderCheckbox(`isConcrete-${patio.id}`, 'Concrete', patio.isConcrete, e => handlePatioChange(patio.id, 'isConcrete', e.target.checked))}
-                        {renderCheckbox(`isPavers-${patio.id}`, 'Pavers', patio.isPavers, e => handlePatioChange(patio.id, 'isPavers', e.target.checked))}
-                        {renderCheckbox(`isGravel-${patio.id}`, 'Gravel', patio.isGravel, e => handlePatioChange(patio.id, 'isGravel', e.target.checked))}
-                      </div>
-                    </div>
-                  ))}
-                  <button type="button" onClick={addPatio} className="neubrutalism-button mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm">Add Patio</button>
-                </div>
-              )}
-              {renderRadioGroup('hasSheds', 'Sheds', yesNoOptions)}
-              {formData.hasSheds === 'Yes' && (
-                <div className="my-4 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] rounded-none bg-neutral-50">
-                  <h3 className="text-md font-bold text-black mb-2">Shed Details</h3>
-                  {formData.sheds.map((shed, index) => (
-                    <div key={shed.id} className="mb-4 p-3 border-2 border-black relative rounded-none bg-white">
-                      <div className="flex justify-between items-center">
-                        <p className="font-semibold text-black">Shed {index + 1}</p>
-                        <button type="button" onClick={() => removeShed(shed.id)} className="neubrutalism-button bg-red-500 text-white px-2 py-0.5 text-xs font-bold hover:bg-red-700 active:bg-red-800">Remove</button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <input type="number" placeholder="Length (ft)" value={shed.lengthFt} onChange={e => handleShedChange(shed.id, 'lengthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
-                        <input type="number" placeholder="Width (ft)" value={shed.widthFt} onChange={e => handleShedChange(shed.id, 'widthFt', e.target.value)} className={`${neubrutalismBaseInputClasses} p-2`} inputMode="decimal" />
-                      </div>
-                    </div>
-                  ))}
-                  <button type="button" onClick={addShed} className="neubrutalism-button mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 text-sm">Add Shed</button>
-                </div>
-              )}
-              {renderRadioGroup('hasFireplace', 'Fireplace', yesNoOptions)}
-              {renderSelect('numberOfFireplaces', 'Number of Fireplaces', fireplaceNumberOptions, true, formData.hasFireplace === 'Yes', formData.numberOfFireplaces)}
-              {formData.hasFireplace === 'Yes' && formData.numberOfFireplaces !== '0' && (
-                <div className="my-3 p-3 border-2 border-black rounded-none bg-neutral-50">
-                  <h4 className="text-sm font-semibold text-black mb-1">Fireplace Features:</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
-                    {renderCheckbox('fireplaceFeatures.wood', 'Wood Burning', formData.fireplaceFeatures.wood, handleChange)}
-                    {renderCheckbox('fireplaceFeatures.gas', 'Gas', formData.fireplaceFeatures.gas, handleChange)}
-                    {renderCheckbox('fireplaceFeatures.gasLogs', 'Gas Logs', formData.fireplaceFeatures.gasLogs, handleChange)}
-                    {renderCheckbox('fireplaceFeatures.electricStarter', 'Electric Starter', formData.fireplaceFeatures.electricStarter, handleChange)}
-                    {renderCheckbox('fireplaceFeatures.vaultedCeilingsNearFP', 'Vaulted Ceilings (near FP)', formData.fireplaceFeatures.vaultedCeilingsNearFP, handleChange)}
-                    {renderCheckbox('fireplaceFeatures.programmableThermostatFP', 'Programmable Thermostat (FP)', formData.fireplaceFeatures.programmableThermostatFP, handleChange)}
-                  </div>
-                </div>
-              )}
-              {renderRadioGroup('waterHeaterType', 'Water Heater Type', waterHeaterOptions)}
-              {renderRadioGroup('acType', 'A/C Type', acOptions)}
-              {renderInput('acTypeOther', 'Specify Other A/C Type', 'text', '', true, formData.acType === 'Other')}
-              {renderRadioGroup('heatType', 'Heat Type', heatOptions)}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                {renderRadioGroup('pool', 'Pool', yesNoOptions)}
-                {renderRadioGroup('hotTubSpa', 'Hot Tub/Spa', yesNoOptions)}
-                {renderRadioGroup('sprinklerSystem', 'Sprinkler System', yesNoOptions)}
-                {renderRadioGroup('alarmSystem', 'Alarm System', yesNoOptions)}
-              </div>
-              {renderSelect('numberOfSmokeDetectors', 'Number of Smoke Detectors', smokeDetectorNumberOptions)}
-              {renderInput('lotNumber', 'Lot Number (if applicable)', 'text')}
-              {renderChipGroup('yardFeatures', 'Yard Features', { backyardGrass: 'Backyard Grass', someTrees: 'Some Trees', noTrees: 'No Trees' })}
-              {renderChipGroup('communityAmenities', 'Community Amenities', { pool: 'Pool', park: 'Park', walkingPaths: 'Walking Paths', clubHouse: 'Club House', weightRoom: 'Weight Room', greenbelt: 'Greenbelt', playground: 'Playground', tennis: 'Tennis', pond: 'Pond' })}
+              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 6: Lot & Community</h2>
+              
+              {renderInput('lotNumber', 'Lot Number', 'text', 'e.g., 123')}
+              
+              {renderChipGroup('yardFeatures', 'Yard Features', {
+                backyardGrass: 'Backyard Grass',
+                someTrees: 'Some Trees',
+                noTrees: 'No Trees'
+              })}
+              
+              {renderChipGroup('communityAmenities', 'Community Amenities', {
+                pool: 'Pool',
+                park: 'Park',
+                walkingPaths: 'Walking Paths',
+                clubHouse: 'Club House',
+                weightRoom: 'Weight Room',
+                greenbelt: 'Greenbelt',
+                playground: 'Playground',
+                tennis: 'Tennis',
+                pond: 'Pond'
+              })}
+              
               {renderRadioGroup('deck', 'Deck', yesNoOptions)}
-              {renderSelect('fenceHeight', 'Fence Height', ['N/A', '4ft', '6ft', '8ft', 'Other'], false, undefined, formData.fenceHeight)}
-              {renderRadioGroup('programmableThermostat', 'Programmable Thermostat (General)?', yesNoOptions)}
+              {renderInput('fenceHeight', 'Fence Height (ft)', 'text', 'e.g., 6')}
+              
+              {renderChipGroup('fenceMaterials', 'Fence Materials', {
+                wood: 'Wood',
+                vinyl: 'Vinyl',
+                chainLink: 'Chain Link'
+              })}
+              
+              {renderRadioGroup('programmableThermostat', 'Programmable Thermostat', yesNoOptions)}
             </section>
           )}
 
           {currentStep === 7 && (
             <section>
               <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Review & Submit</h2>
-              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 6)}
+              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
               <p className="my-4 text-sm text-black">Please review all your entries before submitting.</p>
-              <div className="bg-neutral-100 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] max-h-96 overflow-y-auto space-y-1 text-xs rounded-none">
-                {Object.entries(formData).map(([key, value]) => (
-                  <div key={key} className="py-1">
-                    <strong className="font-mono capitalize text-black">{key.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, l => l.toUpperCase())}: </strong>
-                    <span className="font-mono break-all whitespace-pre-wrap text-neutral-700">
-                      {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <ReviewCard formData={formData} />
               {submissionStatus && (
                 <p className={`mt-4 text-sm p-3 border-2 border-black rounded-none ${submissionStatus.startsWith('Error') ? 'bg-red-200 text-red-800 border-red-800' : 'bg-green-200 text-green-800 border-green-800'}`}>
                   {submissionStatus}
@@ -940,7 +1463,6 @@ export default function CuddRealtyFormPage() {
               )}
             </section>
           )}
-
           <div className="mt-10 pt-6 border-t-2 border-black flex justify-between items-center">
             <button
               type="button"
@@ -970,16 +1492,12 @@ export default function CuddRealtyFormPage() {
             )}
           </div>
         </form>
-
         <footer className="text-center mt-12 pb-8 text-sm text-black">
             <p>&copy; {new Date().getFullYear()} Cudd Realty. Internal Use Only.</p>
             <div className="my-2"></div> 
-            <p className="font-mono text-xs select-none">
-              (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI
-            </p>
+            <p className="font-mono text-xs">(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI</p>
         </footer>
       </div>
-
       <style jsx global>{`
         .shadow-hard-black {
            box-shadow: 8px 8px 0px #000000;
@@ -1024,4 +1542,3 @@ export default function CuddRealtyFormPage() {
     </div>
   );
 }
-
