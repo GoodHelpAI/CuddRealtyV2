@@ -98,6 +98,21 @@ body {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
   }
 
+  /* ------------------------------------------
+   Neubrutalist hover treatment for buttons
+   ------------------------------------------ */
+@layer components {
+  .neubrutalism-button {
+    /* smooth motion */
+    @apply transition-transform transition-shadow duration-150;
+
+    /* hover: raise the card and thicken the shadow */
+    @apply hover:-translate-x-[2px] hover:-translate-y-[2px]
+           hover:shadow-[4px_4px_0_theme(colors.black)]
+           hover:brightness-110;          /* subtle colour boost */
+  }
+}
+
   /* Text / number / textarea inputs */
   .neubrutalism-input {
     @apply block w-full mt-1 p-3 rounded-none border-2 border-black;
