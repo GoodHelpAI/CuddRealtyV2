@@ -921,6 +921,15 @@ export default function CuddRealtyFormPage() {
           {currentStep === 7 && (
             <section>
               <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Additional Information</h2>
+              
+              {/* Please Review Section - START */}
+              {/* This section provides a summary of the form data for review before submission. */}
+              <h3 className="text-xl font-bold text-black mb-4 border-b border-black pb-1">Please Review All Your Entries Before Submitting</h3>
+              <div className="mb-6 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] rounded-none bg-neutral-50 text-sm">
+                {/* This would ideally render a summary of all the collected formData */}
+                <pre className="whitespace-pre-wrap break-words">{JSON.stringify(formData, null, 2)}</pre>
+              </div>
+              {/* Please Review Section - END */}
               {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
               </div>
               {submissionStatus && (
