@@ -109,7 +109,8 @@ body {
 
 /* Custom Neubrutalism styles for specific components if needed */
 .neubrutalism-button {
-  @apply rounded-none border-2 border-black shadow-[2px_2px_0px_theme(colors.black)] hover:shadow-[4px_4px_0px_theme(colors.black)] active:shadow-[1px_1px_0px_theme(colors.black)] focus:ring-2 focus:ring-offset-2 focus:ring-black;
+  @apply rounded-none border-2 border-black shadow-[2px_2px_0px_theme(colors.black)] focus:ring-2 focus:ring-offset-2 focus:ring-black;
+  @apply active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_theme(colors.black)];
 }
 
 .neubrutalism-input {
