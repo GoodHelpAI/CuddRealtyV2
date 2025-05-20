@@ -13,15 +13,21 @@ import { StyledTextarea } from "@/components/form-elements/StyledTextarea";
  */
 export default function Step7AdditionalInfo({ formData, handleChange }: StepProps) {
   return (
-    <div className="space-y-6">
-      <StyledTextarea
-        label="Additional Property Description"
-        name="additionalPropertyDescription"
-        value={formData.additionalPropertyDescription}
-        onChange={handleChange}
-        placeholder="Provide any other relevant details about the property…"
-        rows={9} // 50 % more than the previous 6 rows
-      />
+    <div className="space-y-8">
+      <div className="space-y-6">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Please review all your entries before submitting.
+        </h2>
+        <StyledTextarea
+          label="Additional Property Description"
+          name="additionalPropertyDescription"
+          value={formData.additionalPropertyDescription}
+          onChange={handleChange}
+          placeholder="Provide any other relevant details about the property…"
+          rows={9} // 50 % more than the previous 6 rows
+        />
+      </div>
+      {/* Optionally add a review/summary section here if needed */}
     </div>
   );
 }
