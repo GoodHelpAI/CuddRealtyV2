@@ -14,10 +14,6 @@ import { StyledTextarea } from "@/components/form-elements/StyledTextarea";
 export default function Step7AdditionalInfo({ formData, handleChange }: StepProps) {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold border-b-2 border-black pb-2 mb-6">
-        Additional Information
-      </h2>
-
       <StyledTextarea
         label="Additional Property Description"
         name="additionalPropertyDescription"
