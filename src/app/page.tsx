@@ -304,7 +304,25 @@ export default function CuddRealtyFormPage() {
                         return { ...room, [fieldName]: safeKitchenCabinetSize };
                     }
                     
-                    // For other fields like kitchenRangeType
+                    // Special handling for kitchenRangeType to ensure type safety
+                    if (fieldName === 'kitchenRangeType') {
+                        const safeKitchenRangeType: Room['kitchenRangeType'] = {
+                            gasSingleOven: false,
+                            gasDoubleOven: false,
+                            electricSingleOven: false,
+                            electricDoubleOven: false,
+                            dualFuelSingleOven: false,
+                            dualFuelDoubleOven: false,
+                            cooktopOnly: false,
+                            wallOvenOnly: false,
+                            other: false,
+                            ...updatedGroupState
+                        };
+                        
+                        return { ...room, [fieldName]: safeKitchenRangeType };
+                    }
+                    
+                    // For other fields
                     return { ...room, [fieldName]: updatedGroupState };
                 }
                 return room;
@@ -420,9 +438,10 @@ export default function CuddRealtyFormPage() {
     
     console.log("Final Form Data:", JSON.stringify(finalDataToSend, null, 2)); 
 
-    const n8nWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook-test/c757d1e2-886c-4523-a36e-22b782567ad2";
+    // Using a variable without const to avoid TypeScript string literal type inference
+    let n8nWebhookUrl: string = "https://goodhelpai-n8n.onrender.com/webhook-test/c757d1e2-886c-4523-a36e-22b782567ad2";
 
-    if (!n8nWebhookUrl || n8nWebhookUrl === 'YOUR_N8N_WEBHOOK_URL_PLACEHOLDER') { 
+    if (!n8nWebhookUrl) { 
       alert("WEBHOOK URL NOT SET! This is unexpected or needs configuration.");
       setSubmissionStatus('Error: Webhook URL missing.');
       return;
