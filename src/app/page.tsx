@@ -920,18 +920,7 @@ export default function CuddRealtyFormPage() {
 
           {currentStep === 7 && (
             <section>
-              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Review & Submit</h2>
-              <h3 className="text-xl font-bold text-black mb-4 border-b border-black pb-1">Please Review Your Entries</h3>
-              <div className="bg-neutral-100 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] max-h-96 overflow-y-auto space-y-1 text-xs rounded-none">
-                {Object.entries(formData).map(([key, value]) => (
-                  <div key={key} className="py-1">
-                    <strong className="font-mono capitalize text-black">{key.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, l => l.toUpperCase())}: </strong>
-                    <span className="font-mono break-all whitespace-pre-wrap text-neutral-700">
-                      {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Additional Information</h2>
               {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
               </div>
               {submissionStatus && (
