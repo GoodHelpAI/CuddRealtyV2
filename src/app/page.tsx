@@ -1,3 +1,4 @@
+
 // src/app/page.tsx
 // Make sure you have Next.js (App Router) and Tailwind CSS setup in your project.
 
@@ -99,6 +100,7 @@ interface FormData {
   fenceMaterials: { wood: boolean; vinyl: boolean; chainLink: boolean; };
   programmableThermostat: 'Yes' | 'No';
   additionalPropertyDescription: string;
+  submissionTimestamp: string; // Added timestamp field
 }
 
 type FormChipGroupKeys = 'flooringTypes' | 'fenceMaterials' | 'yardFeatures' | 'communityAmenities' | 'exteriorFeatures'; // Added exteriorFeatures
@@ -126,6 +128,7 @@ const initialFormData: FormData = {
   deck: 'No', fenceHeight: '',
   fenceMaterials: { wood: false, vinyl: false, chainLink: false }, programmableThermostat: 'No',
   additionalPropertyDescription: '',
+  submissionTimestamp: '', // Initialized timestamp
 };
 
 const usStates = [
@@ -228,8 +231,8 @@ export default function CuddRealtyFormPage() {
   };
 
   // Handles changes for range slider inputs
-  const handleSliderChange = (name: 'totalBedrooms' | 'totalBathrooms', value: string) => {
-    const numericValue = name === 'totalBathrooms' ? parseFloat(value) : parseInt(value, 10);
+  const handleSliderChange = (name: 'totalBedrooms' | 'totalBathrooms', value: string | number) => { // Allow number for direct set
+    const numericValue = typeof value === 'number' ? value : (name === 'totalBathrooms' ? parseFloat(value) : parseInt(value, 10));
     setFormData(prev => ({ ...prev, [name]: numericValue }));
   };
 
@@ -357,15 +360,21 @@ export default function CuddRealtyFormPage() {
   // Handles form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault(); setSubmissionStatus('Submitting...');
-    console.log("Final Form Data:", JSON.stringify(formData, null, 2)); // Logs data for debugging
+
+    const finalDataToSend = {
+      ...formData,
+      submissionTimestamp: new Date().toISOString(),
+    };
+    
+    console.log("Final Form Data:", JSON.stringify(finalDataToSend, null, 2)); // Logs data with timestamp
 
     // Use the test webhook URL provided
     const n8nWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook-test/c757d1e2-886c-4523-a36e-22b782567ad2";
     // const n8nProductionWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook/c757d1e2-886c-4523-a36e-22b782567ad2";
 
 
-    if (!n8nWebhookUrl) { // Basic check, though we've hardcoded it now
-      alert("WEBHOOK URL NOT SET! This is unexpected.");
+    if (!n8nWebhookUrl || n8nWebhookUrl === 'YOUR_N8N_WEBHOOK_URL_PLACEHOLDER') { 
+      alert("WEBHOOK URL NOT SET! This is unexpected or needs configuration.");
       setSubmissionStatus('Error: Webhook URL missing.');
       return;
     }
@@ -374,7 +383,7 @@ export default function CuddRealtyFormPage() {
       const response = await fetch(n8nWebhookUrl, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(formData)
+        body: JSON.stringify(finalDataToSend)
       });
       if (response.ok) {
         await response.json(); // Assuming n8n sends back a JSON confirmation
@@ -477,7 +486,7 @@ export default function CuddRealtyFormPage() {
         const room = formData.rooms.find(r => r.id === roomId);
         const firstHyphenIndex = (nameComposite as string).indexOf('-');
         const baseFieldName = (nameComposite as string).substring(0, firstHyphenIndex);
-        const fieldKey = baseFieldName as keyof Room;
+        const fieldKey = baseFieldName as keyof Room; // Type assertion
         if (room && fieldKey in room) {
             currentRadioValue = String((room as any)[fieldKey] ?? '');
         } else if (room) {
