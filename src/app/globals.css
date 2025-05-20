@@ -97,26 +97,37 @@ body {
     /* focus outline */
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
   }
-/* --------------------------------------------------
-   Bolder Neubrutalist hover state for buttons
-   -------------------------------------------------- */
-   @layer components {
-    .neubrutalism-button {
-      /* smooth motion for both hover & active */
-      @apply transition-transform transition-shadow transition-filter duration-150;
-  
-      /* ── Hover ───────────────────────────────────── */
-      @apply hover:-translate-x-[3px] hover:-translate-y-[3px]     /* bigger lift   */
-             hover:shadow-[6px_6px_0_theme(colors.black)]          /* deeper shadow */
-             hover:saturate-150 hover:brightness-125;              /* vivid colour  */
-    }
+/* ---------- Neubrutalist components ---------- */
+@layer components {
+  /* Primary button */
+  .neubrutalism-button {
+    /* base box & colour */
+    @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold select-none;
+    @apply bg-primary text-primary-foreground border-2 border-black rounded-none;
+    @apply shadow-[2px_2px_0_theme(colors.black)];
+
+    /* interactions */
+    @apply transition-all duration-150;                        /* animate everything smoothly */
+    @apply active:translate-x-[1px] active:translate-y-[1px]
+           active:shadow-[1px_1px_0_theme(colors.black)];
+
+    /* bold hover lift & pop */
+    @apply hover:-translate-x-[3px] hover:-translate-y-[3px]
+           hover:shadow-[6px_6px_0_theme(colors.black)]
+           hover:saturate-150 hover:brightness-125;
+
+    /* focus outline */
+    @apply focus:outline-none focus-visible:ring-2
+           focus-visible:ring-black focus-visible:ring-offset-0;
   }
+
   /* Text / number / textarea inputs */
   .neubrutalism-input {
     @apply block w-full mt-1 p-3 rounded-none border-2 border-black;
     @apply bg-card text-card-foreground placeholder-muted-foreground;
     @apply shadow-[2px_2px_0_theme(colors.black)];
     @apply disabled:opacity-70 disabled:cursor-not-allowed;
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-0;
+    @apply focus:outline-none focus-visible:ring-2
+           focus-visible:ring-black focus-visible:ring-offset-0;
   }
 }
