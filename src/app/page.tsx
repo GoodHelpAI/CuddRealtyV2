@@ -1,6 +1,3 @@
-in a webapp that I've made (vibe coding, I have no coding experience) there is a file called 'page.tsx'. What is the purpose of the file?
-
-
 // src/app/page.tsx
 // Make sure you have Next.js (App Router) and Tailwind CSS setup in your project.
 
