@@ -4,8 +4,6 @@ import React from "react";
 import type { StepProps } from "@/interfaces";
 import { StyledTextarea } from "@/components/form-elements/StyledTextarea";
 
-import ReviewCard from "@/components/form-steps/ReviewCard";
-
 /**
  * Step 7 – Additional Information
  */
@@ -20,10 +18,7 @@ export default function Step7AdditionalInfo({ formData, handleChange }: StepProp
         placeholder="Provide any other relevant details about the property…"
         rows={6}
       />
-
-      {/* Review Section */}
-      <h2 className="text-xl font-semibold">Please review all your entries before submitting:</h2>
-      <ReviewCard formData={formData} />
+      {/* Review section removed */}
     </div>
   );
 }
