@@ -359,10 +359,13 @@ export default function CuddRealtyFormPage() {
     e.preventDefault(); setSubmissionStatus('Submitting...');
     console.log("Final Form Data:", JSON.stringify(formData, null, 2)); // Logs data for debugging
 
-    // Retrieve webhook URL from environment variables or use a placeholder
-    const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'YOUR_N8N_WEBHOOK_URL_PLACEHOLDER';
-    if (n8nWebhookUrl === 'YOUR_N8N_WEBHOOK_URL_PLACEHOLDER') {
-      alert("WEBHOOK URL NOT SET! Please configure NEXT_PUBLIC_N8N_WEBHOOK_URL in your .env.local file.");
+    // Use the test webhook URL provided
+    const n8nWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook-test/c757d1e2-886c-4523-a36e-22b782567ad2";
+    // const n8nProductionWebhookUrl = "https://goodhelpai-n8n.onrender.com/webhook/c757d1e2-886c-4523-a36e-22b782567ad2";
+
+
+    if (!n8nWebhookUrl) { // Basic check, though we've hardcoded it now
+      alert("WEBHOOK URL NOT SET! This is unexpected.");
       setSubmissionStatus('Error: Webhook URL missing.');
       return;
     }
@@ -993,10 +996,10 @@ export default function CuddRealtyFormPage() {
             ) : (
               <button
                 type="submit"
-                className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 border-b-4 border-red-800 hover:border-red-900 shadow-md active:shadow-none active:translate-y-1 rounded-none"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 border-b-4 border-green-700 hover:border-green-800 shadow-md active:shadow-none active:translate-y-1 rounded-none"
                 disabled={submissionStatus === 'Submitting...'}
               >
-                {submissionStatus === 'Submitting...' ? 'Submitting...' : 'Submit to n8n'}
+                {submissionStatus === 'Submitting...' ? 'Submitting...' : 'Submit'}
               </button>
             )}
           </div>
@@ -1005,6 +1008,7 @@ export default function CuddRealtyFormPage() {
          {/* NB: Footer text to text-black and slightly bolder */}
         <footer className="text-center mt-12 pb-8 text-sm text-black">
             <p>&copy; {new Date().getFullYear()} Cudd Realty. Internal Use Only.</p>
+            <div className="my-2"></div> {/* Added for spacing */}
             <p className="font-mono">(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI</p>
         </footer>
       </div>
