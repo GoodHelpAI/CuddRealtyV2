@@ -36,7 +36,7 @@ body {
 
     --border: 0 0% 0%; /* Black for borders */
     --input: 0 0% 0%; /* Black for input borders */
-    --ring: 215 100% 40%; /* Blue for focus rings */
+    --ring: 215 100% 40%; /* Blue for focus rings (default, should be overridden by focus:ring-black) */
 
     --radius: 0rem; /* No rounded corners for Neubrutalism */
 
@@ -84,7 +84,7 @@ body {
 
     --border: 60 100% 50%; /* Yellow borders in dark mode */
     --input: 60 100% 50%;
-    --ring: 215 100% 50%;
+    --ring: 215 100% 50%; /* Blue ring for dark mode */
 
     /* Sidebar specific colors - dark mode */
     --sidebar-background: 0 0% 10%;
@@ -96,9 +96,7 @@ body {
     --sidebar-border: 60 100% 50%;
     --sidebar-ring: 215 100% 50%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -107,12 +105,18 @@ body {
   }
 }
 
-/* Custom Neubrutalism styles for specific components if needed */
-.neubrutalism-button {
-  @apply rounded-none border-2 border-black shadow-[2px_2px_0px_theme(colors.black)] focus:ring-2 focus:ring-offset-2 focus:ring-black;
-  @apply active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_theme(colors.black)];
-}
+/* Custom Neubrutalism styles */
+@layer components {
+  .neubrutalism-button {
+    @apply rounded-none border-2 border-black shadow-[2px_2px_0px_theme(colors.black)];
+    @apply active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_theme(colors.black)];
+    /* Ensure default browser outline is off and custom black ring is applied with a background-aware offset */
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black focus:ring-offset-background;
+  }
 
-.neubrutalism-input {
-  @apply mt-1 block w-full rounded-none border-2 border-black p-3 shadow-[2px_2px_0px_theme(colors.black)] focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:border-black focus:outline-none bg-card text-card-foreground placeholder-muted-foreground disabled:opacity-70 disabled:cursor-not-allowed;
+  .neubrutalism-input {
+    @apply mt-1 block w-full rounded-none border-2 border-black p-3 shadow-[2px_2px_0px_theme(colors.black)] bg-card text-card-foreground placeholder-muted-foreground disabled:opacity-70 disabled:cursor-not-allowed;
+    /* Inputs use primary color for ring, ensure outline is off */
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:border-black;
+  }
 }
