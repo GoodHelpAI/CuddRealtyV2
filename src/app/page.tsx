@@ -921,7 +921,6 @@ export default function CuddRealtyFormPage() {
           {currentStep === 7 && (
             <section>
               <h2 className="text-2xl font-bold text-black mb-6 border-b-2 border-black pb-2">Step 7: Review & Submit</h2>
-              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
               <p className="my-4 text-sm text-black">Please review all your entries before submitting.</p>
               <div className="bg-neutral-100 p-4 border-2 border-black shadow-[4px_4px_0px_#000000] max-h-96 overflow-y-auto space-y-1 text-xs rounded-none">
                 {Object.entries(formData).map(([key, value]) => (
@@ -932,6 +931,7 @@ export default function CuddRealtyFormPage() {
                     </span>
                   </div>
                 ))}
+              {renderTextarea('additionalPropertyDescription', 'Overall Property Description / Final Notes', 'Unique features, general notes, items not covered elsewhere, etc.', 9)}
               </div>
               {submissionStatus && (
                 <p className={`mt-4 text-sm p-3 border-2 border-black rounded-none ${submissionStatus.startsWith('Error') ? 'bg-red-200 text-red-800 border-red-800' : 'bg-green-200 text-green-800 border-green-800'}`}>
