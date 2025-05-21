@@ -24,13 +24,9 @@ export default function Step6LotAndCommunity({ formData, handleChange, handleChi
         placeholder="e.g., 12B"
       />
 
-      <ChipGroup
-        label="Yard Features"
-        options={yardFeatureOptions}
-        selectedOptions={formData.yardFeatures}
-        onToggle={(key) => handleChipToggle('yardFeatures', key)}
-        name="yardFeatures"
-      />
+      {/* yardFeatures MOVED to Step5Flooring.tsx */}
+      {/* deck, fenceHeight, fenceMaterials MOVED to Step5Flooring.tsx */}
+
 
       <ChipGroup
         label="Community Amenities"
@@ -40,40 +36,7 @@ export default function Step6LotAndCommunity({ formData, handleChange, handleChi
         name="communityAmenities"
       />
 
-      <StyledRadioGroup
-        label="Deck?"
-        name="deck"
-        options={yesNoOptions}
-        value={formData.deck}
-        onValueChange={(value) => handleChange({ target: { name: 'deck', value } } as any)}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <StyledInput
-          label="Fence Height (ft, if applicable)"
-          name="fenceHeight"
-          type="text" // Can be range e.g. 6-8
-          value={formData.fenceHeight}
-          onChange={handleChange}
-          placeholder="e.g., 6 or 6-8"
-        />
-        <ChipGroup
-          label="Fence Materials"
-          options={fenceMaterialOptions}
-          selectedOptions={formData.fenceMaterials}
-          onToggle={(key) => handleChipToggle('fenceMaterials', key)}
-          name="fenceMaterials"
-          containerClassName="md:col-span-1"
-        />
-      </div>
-
-      <StyledRadioGroup
-        label="Programmable Thermostat?"
-        name="programmableThermostat"
-        options={yesNoOptions}
-        value={formData.programmableThermostat}
-        onValueChange={(value) => handleChange({ target: { name: 'programmableThermostat', value } } as any)}
-      />
+      {/* programmableThermostat MOVED to Step4Rooms.tsx */}
     </div>
   );
 }

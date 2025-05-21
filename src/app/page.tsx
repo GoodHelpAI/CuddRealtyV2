@@ -468,7 +468,7 @@ export default function CuddRealtyFormPage() {
     }
   };
 
-  const neubrutalismBaseInputClasses = "mt-1 block w-full border-2 border-black p-3 shadow-[2px_2px_0px_#000000] focus:ring-4 focus:ring-black focus:ring-offset-0 focus:border-black focus:outline-none sm:text-sm bg-white text-black placeholder-neutral-400";
+  const neubrutalismBaseInputClasses = "mt-1 block w-full border-2 border-black p-3 shadow-[2px_2px_0px_#000000] focus:ring-4 focus:ring-black focus:ring-offset-0 focus:border-black focus:outline-none sm:text-sm bg-white text-black placeholder-neutral-400 rounded-none";
 
   const renderInput = (name: keyof FormData, label: string, type = 'text', placeholder = '', isConditional = false, condition?: boolean) => {
     if (isConditional && !condition && name !== 'acTypeOther') return null; 
@@ -1411,13 +1411,13 @@ export default function CuddRealtyFormPage() {
 
               {renderRadioGroup('pool', 'Pool', yesNoOptions)}
               {renderRadioGroup('hotTubSpa', 'Hot Tub/Spa', yesNoOptions)}
-              {renderRadioGroup('sprinklerSystem', 'Sprinkler System', yesNoOptions)}
-              {renderRadioGroup('alarmSystem', 'Alarm System', yesNoOptions)}
+              
+              {/* numberOfSmokeDetectors, alarmSystem, sprinklerSystem MOVED to Step4Rooms.tsx */}
               
               <div className="mb-4">
-                <label htmlFor="numberOfSmokeDetectors" className="block text-sm font-bold text-black mb-1">Number of Smoke Detectors</label>
+                {/* <label htmlFor="numberOfSmokeDetectors" className="block text-sm font-bold text-black mb-1">Number of Smoke Detectors</label> */}
                 <select
-                  name="numberOfSmokeDetectors"
+                  {/* name="numberOfSmokeDetectors"
                   id="numberOfSmokeDetectors"
                   value={formData.numberOfSmokeDetectors}
                   onChange={handleChange}
@@ -1427,7 +1427,7 @@ export default function CuddRealtyFormPage() {
                   {smokeDetectorNumberOptions.map(num => (
                     <option key={num} value={num}>{num}</option>
                   ))}
-                </select>
+                </select> */}
               </div>
             </section>
           )}
@@ -1517,47 +1517,7 @@ export default function CuddRealtyFormPage() {
             <p className="font-mono text-xs">(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Made by GoodHelpAI</p>
         </footer>
       </div>
-      <style jsx global>{`
-        .shadow-hard-black {
-           box-shadow: 8px 8px 0px #000000;
-        }
-        select {
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
-          background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-          background-repeat: no-repeat;
-          background-position: right 0.7rem center; 
-          background-size: 0.65em auto; 
-          padding-right: 2.5rem; 
-        }
-        .custom-radio-input:focus + .custom-radio-button,
-        .custom-checkbox-input:focus + .custom-checkbox-button {
-            outline: 3px solid black; 
-            outline-offset: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-          -webkit-appearance: none; 
-          appearance: none;
-          width: 20px; 
-          height: 20px; 
-          background: #0052cc; 
-          border: 2px solid black; 
-          cursor: pointer; 
-          border-radius: 0; 
-        }
-        input[type="range"]::-moz-range-thumb {
-          width: 18px; 
-          height: 18px; 
-          background: #0052cc; 
-          border: 2px solid black; 
-          cursor: pointer; 
-          border-radius: 0; 
-        }
-        button, input, select, textarea, .shadow-hard-black, .custom-radio-button, .custom-checkbox-button {
-            border-radius: 0 !important; 
-        }
-      `}</style>
+      {/* Global styles moved to src/app/globals.css */}
     </div>
   );
 }

@@ -262,6 +262,7 @@ export default function ReviewCard({ formData }: { formData: FormData }) {
       <RenderDirectProperty propertyKey="acType" value={formData.acType} />
       {formData.acType === 'Other' && <RenderDirectProperty propertyKey="acTypeOther" value={formData.acTypeOther} />}
       <RenderDirectProperty propertyKey="heatType" value={formData.heatType} />
+      {/* Fields moved from Step 5 (page.tsx) and Step 6 to Step 4, now grouped here in ReviewCard */}
       <RenderDirectProperty propertyKey="sprinklerSystem" value={formData.sprinklerSystem} />
       <RenderDirectProperty propertyKey="alarmSystem" value={formData.alarmSystem} />
       <RenderDirectProperty propertyKey="numberOfSmokeDetectors" value={formData.numberOfSmokeDetectors} />
@@ -303,13 +304,15 @@ export default function ReviewCard({ formData }: { formData: FormData }) {
           <RenderDirectProperty propertyKey="rvPadWidthFt" value={formData.rvPadWidthFt} />
         </>
       )}
+      {/* Fields moved from Step 6 to Step 5, now grouped here in ReviewCard */}
       <RenderDirectProperty propertyKey="deck" value={formData.deck} />
+      <RenderDirectProperty propertyKey="fenceHeight" value={formData.fenceHeight} />
+      <RenderChipGroup data={formData.fenceMaterials} label={formatLabel("fenceMaterials")} />
       
       <SectionHeading title="Lot & Community" />
       <RenderDirectProperty propertyKey="lotNumber" value={formData.lotNumber} />
+      {/* yardFeatures moved from Step 6 to Step 5, now grouped here in ReviewCard */}
       <RenderChipGroup data={formData.yardFeatures} label={formatLabel("yardFeatures")} />
-      <RenderDirectProperty propertyKey="fenceHeight" value={formData.fenceHeight} />
-      <RenderChipGroup data={formData.fenceMaterials} label={formatLabel("fenceMaterials")} />
       <RenderChipGroup data={formData.communityAmenities} label={formatLabel("communityAmenities")} />
 
       <SectionHeading title="Additional Notes" />
